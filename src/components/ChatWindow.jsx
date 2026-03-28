@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PanelLeft, ChevronDown, Plus, ArrowUp, X, Share } from 'lucide-react';
+import { PanelLeft, ChevronDown, Plus, ArrowUp, X, Share, Eye } from 'lucide-react';
 import logoIcon from '../assets/logo_icon.svg';
 import Message from './Message';
 import { API_BASE_URL, MODELS, getApiConfigForModel } from '../constants';
@@ -11,12 +11,14 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
   const [isLoading, setIsLoading] = useState(false);
   const [shareText, setShareText] = useState('Share');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-  
+  const [replyingTo, setReplyingTo] = useState(null); // { index, role, text }
+  const [previewArtifact, setPreviewArtifact] = useState(null); // { code, language }
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const messages = activeChat?.messages || [];  
+  const messages = activeChat?.messages || [];
   const chatId = activeChat?.id;
 
   const scrollToBottom = () => {
@@ -39,15 +41,21 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isModelDropdownOpen]);
 
+  useEffect(() => {
+    if (!selectedModel && MODELS.length > 0) {
+      setSelectedModel(MODELS[0]);
+    }
+  }, [selectedModel, setSelectedModel]);
+
   const handleShare = () => {
     if (messages.length === 0) return;
-    
+
     let textOut = `# ${activeChat?.title || 'OmniMind Chat Transcript'}\n\n`;
     messages.forEach(m => {
-       const rawText = m.role === 'user' ? (m.uiDisplay?.text || m.content) : m.content;
-       textOut += `**${m.role === 'user' ? 'Me' : 'OmniMind'}**:\n${rawText}\n\n---\n\n`;
+      const rawText = m.role === 'user' ? (m.uiDisplay?.text || m.content) : m.content;
+      textOut += `**${m.role === 'user' ? 'Me' : 'OmniMind'}**:\n${rawText}\n\n---\n\n`;
     });
-    
+
     navigator.clipboard.writeText(textOut);
     setShareText('Copied!');
     setTimeout(() => setShareText('Share'), 2000);
@@ -85,7 +93,7 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
       const img = new Image();
       img.onload = async () => {
         const canvas = document.createElement('canvas');
-        const MAX_DIMENSION = 1200; 
+        const MAX_DIMENSION = 1200;
         let width = img.width;
         let height = img.height;
 
@@ -101,7 +109,7 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         canvas.toBlob(async (blob) => {
           try {
             const formData = new FormData();
@@ -138,14 +146,14 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
   const generateTitle = async (chatIdTarget, userMessage, assistantMessage) => {
     try {
       const prompt = `Generate a very short, catchy title (max 5 words) for a chat that starts with this user message: "${userMessage}" and AI response: "${assistantMessage.slice(0, 100)}...". Do not use quotes or punctuation at the end. Best language for the title is the same as the user's message.`;
-      
+
       const titleConfig = getApiConfigForModel("gpt-4o-mini");
       const response = await fetch(`${titleConfig.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${titleConfig.apiKey}` },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           model: "gpt-4o-mini", // Use a fast model for title generation
-          messages: [{ role: "user", content: prompt }] 
+          messages: [{ role: "user", content: prompt }]
         })
       });
 
@@ -168,7 +176,8 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
     setIsLoading(true);
     setInput('');
     setAttachment(null);
-    if (inputRef.current) inputRef.current.style.height = 'auto'; 
+    setReplyingTo(null);
+    if (inputRef.current) inputRef.current.style.height = 'auto';
 
     const conversationForAPI = updatedMessagesArray.map(m => ({ role: m.role, content: m.content }));
 
@@ -190,7 +199,7 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
 
       const data = await response.json();
       const aiReply = data?.choices?.[0]?.message?.content || "No response output from this model.";
-      
+
       const newMessages = [...updatedMessagesArray, { role: 'assistant', content: aiReply }];
       updateChatMessages(chatIdTarget, newMessages);
 
@@ -202,7 +211,7 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
       // Diagnostic messages based on error type/status
       let errorTitle = "Network Error";
       let errorDetail = "Please check your internet connection.";
-      
+
       if (error.message.includes('401')) {
         errorTitle = "Authentication Failed";
         errorDetail = "Invalid API Key. Please update your settings.";
@@ -218,7 +227,7 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
       }
 
       addToast(`${errorTitle}: ${errorDetail}`, "error");
-      
+
       // We don't add the generic "Unable to reach AI server" message to the chat anymore
       // instead we just stop loading and let the user retry.
     } finally {
@@ -231,14 +240,14 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
     if (!chatId || isLoading) return;
     // Keep everything up to (but not including) the edited user message
     const slicedMessages = messages.slice(0, index);
-    
+
     // Create new message block
-    const editedMsg = { 
-      role: 'user', 
+    const editedMsg = {
+      role: 'user',
       content: newText,
       uiDisplay: { text: newText, imageUrl: messages[index].uiDisplay?.imageUrl || null } // retain older images if they existed
     };
-    
+
     const newConversation = [...slicedMessages, editedMsg];
     updateChatMessages(chatId, newConversation);
     runInference(chatId, newConversation);
@@ -251,6 +260,44 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
     updateChatMessages(chatId, slicedMessages);
     // Rerun inference on the exact state before this assistant reply
     runInference(chatId, slicedMessages);
+  };
+
+  const handleDeleteMessage = (index) => {
+    if (!chatId || isLoading) return;
+    const newConversation = [...messages];
+    
+    // If the next message is an assistant reply, delete that paired reply too to prevent orphaned context
+    if (newConversation[index].role === 'user' && index + 1 < newConversation.length && newConversation[index+1].role === 'assistant') {
+      newConversation.splice(index, 2);
+    } else {
+      newConversation.splice(index, 1);
+    }
+    
+    updateChatMessages(chatId, newConversation);
+  };
+
+  const handleReply = (index) => {
+    const msg = messages[index];
+    const text = msg.uiDisplay ? msg.uiDisplay.text : msg.content;
+    setReplyingTo({ index, role: msg.role, text: typeof text === 'string' ? text : 'Image/File' });
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const handleArtifactUpdate = (index, newCode) => {
+    if (!chatId) return;
+    const newConversation = [...messages];
+    // Use regex to locate and replace the EXACT code block in the message content
+    const oldContent = newConversation[index].content;
+    // This is a simplified replacement; for production, we'd want to match the specific Nth block
+    // But since we usually have one main block per artifact, this works well.
+    const updatedContent = oldContent.replace(/```(\w+)?\n([\s\S]*?)```/, (match, lang) => {
+      return `\`\`\`${lang || ''}\n${newCode}\n\`\`\``;
+    });
+    
+    newConversation[index].content = updatedContent;
+    updateChatMessages(chatId, newConversation);
   };
 
   const handleSubmit = async () => {
@@ -266,8 +313,8 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
       contentPayload = input.trim();
     }
 
-    const userMsg = { 
-      role: 'user', 
+    const userMsg = {
+      role: 'user',
       content: contentPayload,
       uiDisplay: { text: input.trim(), imageUrl: attachment ? attachment.url : null }
     };
@@ -279,61 +326,69 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
   };
 
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', flex: 1, minHeight: 0 }}>
+    <section className={`chat-window-section ${messages.length === 0 ? 'is-empty' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', flex: 1, minHeight: 0 }}>
       <header className="top-header">
         <div className="header-left">
           {!isSidebarOpen && (
             <button className="open-sidebar-btn" onClick={toggleSidebar} title="Open sidebar">
-               <PanelLeft size={18} />
+              <PanelLeft size={18} />
             </button>
           )}
-          
+
           <div className="chat-title-btn">
-             {activeChat?.title || "New Chat"} <ChevronDown size={14} style={{ color: 'var(--text-tertiary)' }} />
+            {activeChat?.title || "New Chat"} <ChevronDown size={14} style={{ color: 'var(--text-tertiary)' }} />
           </div>
         </div>
         <div>
-           <button className="share-btn" onClick={handleShare}>{shareText}</button>
+          <button className="share-btn" onClick={handleShare}>{shareText}</button>
         </div>
       </header>
 
       <div className="chat-scroll-area">
         <div className="chat-container-inner">
           {messages.length === 0 ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '300px', color: 'var(--text-secondary)'}}>
-              <h2 style={{ fontSize: '24px', fontWeight: '500', color: 'var(--text-primary)'}}>Good afternoon</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '60vh', color: 'var(--text-secondary)' }}>
+              <h2 style={{ fontSize: '28px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}
+              </h2>
+              <p style={{ fontSize: '27px', color: 'var(--text-tertiary)', fontWeight: '400' }}>Where should we begin?</p>
             </div>
           ) : (
-             messages.map((msg, index) => {
-               let textContent = msg.uiDisplay ? msg.uiDisplay.text : msg.content;
-               let imgContent = msg.uiDisplay ? msg.uiDisplay.imageUrl : null;
-               
-               if (Array.isArray(textContent)) {
-                 const textObj = textContent.find(c => c.type === 'text');
-                 const imgObj = textContent.find(c => c.type === 'image_url');
-                 textContent = textObj ? textObj.text : '';
-                 imgContent = imgObj ? imgObj.image_url.url : null;
-               }
+            messages.map((msg, index) => {
+              let textContent = msg.uiDisplay ? msg.uiDisplay.text : msg.content;
+              let imgContent = msg.uiDisplay ? msg.uiDisplay.imageUrl : null;
 
-               return (
-                 <Message 
-                   key={`${chatId}-${index}`} 
-                   index={index}
-                   role={msg.role} 
-                   content={typeof textContent === 'string' ? textContent : ''} 
-                   imageUrl={imgContent} 
-                   onEdit={handleEditMessage}
-                   onRetry={handleRetryMessage}
-                 />
-               );
-             })
+              if (Array.isArray(textContent)) {
+                const textObj = textContent.find(c => c.type === 'text');
+                const imgObj = textContent.find(c => c.type === 'image_url');
+                textContent = textObj ? textObj.text : '';
+                imgContent = imgObj ? imgObj.image_url.url : null;
+              }
+
+              return (
+                <Message
+                  key={`${chatId}-${index}`}
+                  index={index}
+                  role={msg.role}
+                  content={typeof textContent === 'string' ? textContent : ''}
+                  imageUrl={imgContent}
+                  onEdit={handleEditMessage}
+                  onRetry={handleRetryMessage}
+                  onDelete={handleDeleteMessage}
+                  onReply={handleReply}
+                  onArtifactPreview={(code, language) => setPreviewArtifact({ code, language })}
+                  onArtifactUpdate={(newCode) => handleArtifactUpdate(index, newCode)}
+                  addToast={addToast}
+                />
+              );
+            })
           )}
           {isLoading && (
             <div className="message-row assistant">
-               <div className="assistant-avatar-wrapper pulsing">
-                  <img src={logoIcon} alt="OmniMind" className="assistant-logo" />
-               </div>
-               <div className="assistant-content" style={{ color: 'var(--text-tertiary)', paddingTop: '10px'}}>Thinking...</div>
+              <div className="assistant-avatar-wrapper pulsing">
+                <img src={logoIcon} alt="OmniMind" className="assistant-logo" />
+              </div>
+              <div className="assistant-content" style={{ color: 'var(--text-tertiary)', paddingTop: '10px' }}>Thinking...</div>
             </div>
           )}
           <div ref={messagesEndRef} style={{ height: '40px' }} />
@@ -342,6 +397,18 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
 
       <div className="input-island-container">
         <div className="input-island">
+          {replyingTo && (
+            <div className="reply-preview-bar">
+              <div className="reply-preview-content">
+                <span className="reply-label">{replyingTo.role === 'user' ? 'Replying to you' : 'Replying to OmniMind'}</span>
+                <p className="reply-text-shorthand">{replyingTo.text}</p>
+              </div>
+              <button className="reply-cancel-btn" onClick={() => setReplyingTo(null)}>
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           {attachment && (
             <div className={`attachment-chip ${attachment.isUploading ? 'uploading' : ''}`}>
               {attachment.isUploading ? (
@@ -354,48 +421,48 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
               </button>
             </div>
           )}
-          
+
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-             <textarea
-               ref={inputRef}
-               className="claude-textarea"
-               value={input}
-               onChange={handleInputChange}
-               onKeyDown={handleKeyDown}
-               placeholder="Reply..."
-               rows={1}
-               disabled={isLoading || !chatId}
-             />
-             
-             {(input.trim() || attachment) && (
-               <button className="send-btn" onClick={handleSubmit} disabled={isLoading || (attachment && attachment.isUploading) || !chatId}>
-                  <ArrowUp size={16} strokeWidth={3} />
-               </button>
-             )}
+            <textarea
+              ref={inputRef}
+              className="claude-textarea"
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Reply..."
+              rows={1}
+              disabled={isLoading || !chatId}
+            />
+
+            {(input.trim() || attachment) && (
+              <button className="send-btn" onClick={handleSubmit} disabled={isLoading || (attachment && attachment.isUploading) || !chatId}>
+                <ArrowUp size={16} strokeWidth={3} />
+              </button>
+            )}
           </div>
-          
+
           <div className="input-bottom-row">
             <input type="file" accept="image/*" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
             <button className="attach-btn" onClick={() => fileInputRef.current?.click()} disabled={isLoading || isUploadingAttachment || !chatId}>
               <Plus size={18} />
             </button>
-            
+
             <div className="input-right-actions">
               <div style={{ position: 'relative' }}>
-                <button 
-                  className="model-dropdown-btn" 
+                <button
+                  className="model-dropdown-btn"
                   onClick={(e) => { e.stopPropagation(); setIsModelDropdownOpen(!isModelDropdownOpen); }}
                   disabled={isLoading || !chatId || MODELS.length === 0}
                   style={{ background: 'transparent', color: 'var(--text-secondary)', border: 'none', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
-                  {selectedModel || "No Key Found"} <ChevronDown size={14} />
+                  {selectedModel || "No Model Found"} <ChevronDown size={14} />
                 </button>
-                
+
                 {isModelDropdownOpen && MODELS.length > 0 && (
                   <div className="custom-dropdown-menu" onClick={(e) => e.stopPropagation()}>
                     {MODELS.map(m => (
-                      <div 
-                        key={m} 
+                      <div
+                        key={m}
                         className={`custom-dropdown-item ${selectedModel === m ? 'active' : ''}`}
                         onClick={() => { setSelectedModel(m); setIsModelDropdownOpen(false); }}
                       >
@@ -410,6 +477,43 @@ export default function ChatWindow({ selectedModel, setSelectedModel, toggleSide
         </div>
         <div className="footer-text">OmniMind is AI and can make mistakes. Please double-check responses.</div>
       </div>
+
+      <aside className={`artifacts-sidebar ${previewArtifact ? 'open' : ''}`}>
+        <div className="artifacts-sidebar-header">
+          <div className="artifacts-sidebar-title">
+             <Eye size={16} /> <span>Live Preview</span>
+          </div>
+          <button className="artifacts-close-btn" onClick={() => setPreviewArtifact(null)}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className="artifacts-sidebar-body">
+          {previewArtifact ? (
+            ['html', 'svg'].includes(previewArtifact.language?.toLowerCase()) ? (
+              <iframe
+                title="Artifact Preview"
+                srcDoc={previewArtifact.language?.toLowerCase() === 'svg' 
+                  ? `<!DOCTYPE html><html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;">${previewArtifact.code}</body></html>`
+                  : previewArtifact.code
+                }
+                className="artifact-iframe"
+                sandbox="allow-scripts"
+              />
+            ) : (
+              <div className="no-preview-placeholder">
+                <p>Real-time preview is primarily for HTML/SVG.</p>
+                <p>For {previewArtifact.language}, use the 'Edit' mode to view source.</p>
+              </div>
+            )
+          ) : (
+            <div className="no-preview-placeholder">
+              <p>Select a code block to preview.</p>
+            </div>
+          )}
+        </div>
+      </aside>
+      
+      {previewArtifact && <div className="artifacts-overlay" onClick={() => setPreviewArtifact(null)} />}
     </section>
   );
 }

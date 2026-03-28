@@ -3,10 +3,11 @@ import ReactMarkdown from 'react-markdown';
 import ErrorBoundary from './ErrorBoundary';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Copy, ThumbsUp, ThumbsDown, RotateCcw, Check, PenLine, X } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown, RotateCcw, Check, PenLine, X, Trash2, Reply, Eye, Download } from 'lucide-react';
 import assistantIcon from '../assets/logo_icon.svg';
+import CodeBlock from './CodeBlock';
 
-export default function Message({ index, role, content, imageUrl, onEdit, onRetry }) {
+export default function Message({ index, role, content, imageUrl, onEdit, onRetry, onDelete, onReply, onArtifactPreview, onArtifactUpdate, addToast }) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState(null); 
   const [isEditing, setIsEditing] = useState(false);
@@ -20,6 +21,7 @@ export default function Message({ index, role, content, imageUrl, onEdit, onRetr
     if (content) {
       navigator.clipboard.writeText(content);
       setCopied(true);
+      if (addToast) addToast("Copied to clipboard", "success");
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -54,16 +56,25 @@ export default function Message({ index, role, content, imageUrl, onEdit, onRetr
     
     return (
       <div className="message-row user">
-        <div className="message-bubble-user-container">
+        <div className="message-bubble-user-wrapper">
           <div className="message-bubble-user">
             {imageUrl && (
                <img src={imageUrl} alt="Attached" style={{ maxWidth: '200px', borderRadius: '8px', marginBottom: '8px', display: 'block'}} />
             )}
             {safeContent && <span>{safeContent}</span>}
           </div>
-          <button className="message-edit-btn" title="Edit Message" onClick={() => setIsEditing(true)}>
-             <PenLine size={14} />
-          </button>
+          
+          <div className="message-actions user-actions">
+            <div className="action-icon" title="Copy" onClick={handleCopy}>
+               {copied ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
+            </div>
+            <div className="action-icon" title="Edit Message" onClick={() => setIsEditing(true)}>
+               <PenLine size={14} />
+            </div>
+            <div className="action-icon" title="Delete Pair" onClick={() => onDelete(index)}>
+               <Trash2 size={14} style={{ color: '#ef4444' }} />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -84,17 +95,12 @@ export default function Message({ index, role, content, imageUrl, onEdit, onRetr
                     const { children, className, node, ...rest } = props;
                     const match = /language-(\w+)/.exec(className || '');
                     return match ? (
-                      <SyntaxHighlighter
-                        {...rest}
-                        PreTag="div"
-                        children={String(children).replace(/\n$/, '')}
-                        language={match[1]}
-                        style={vscDarkPlus}
-                        customStyle={{
-                          margin: 0,
-                          borderRadius: '6px',
-                          background: '#181818'
-                        }}
+                      <CodeBlock 
+                        language={match[1]} 
+                        value={String(children).replace(/\n$/, '')} 
+                        onPreview={onArtifactPreview}
+                        onUpdate={onArtifactUpdate}
+                        addToast={addToast}
                       />
                     ) : (
                       <code {...rest} className={className}>
@@ -131,6 +137,9 @@ export default function Message({ index, role, content, imageUrl, onEdit, onRetr
             </div>
             <div className="action-icon" title="Reload Option" onClick={() => onRetry(index)}>
                <RotateCcw size={14} />
+            </div>
+            <div className="action-icon" title="Reply" onClick={() => onReply(index)}>
+               <Reply size={14} />
             </div>
           </div>
         </div>

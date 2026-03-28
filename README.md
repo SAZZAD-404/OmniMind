@@ -1,90 +1,75 @@
 <div align="center">
-  <h1 align="center">OmniMind AI Workspace</h1>
-  <p align="center">
-    <strong>One interface. All models. Infinite possibilities.</strong>
-    <br />
-    A beautifully crafted, production-grade AI Workspace built to bring the world's best models under a single, cohesive, premium UI.
-    <br />
-    <br />
-    <a href="#features">Features</a> · 
-    <a href="#installation">Installation</a> · 
-    <a href="#tech-stack">Tech Stack</a> · 
-    <a href="#contributing">Contributing</a>
-  </p>
+
+![OmniMind Banner](docs/omnimind_ai_banner.png)
+
+# OmniMind AI Workspace
+### *The Professional-Grade AI Environment for Power Users*
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![UI: Premium](https://img.shields.io/badge/UI-Premium-orange.svg)](#)
+[![Status: Production_Ready](https://img.shields.io/badge/Status-Production--Ready-success.svg)](#)
+
 </div>
 
 ---
 
-## 📸 Sneak Peek
+## 🌟 The Vision
+**OmniMind** is not just another chatbot; it is a high-performance **AI Workspace** designed for developers, creators, and professionals who demand a minimalist yet powerful interface. Built on a foundation of speed, visual excellence, and utility, OmniMind transforms raw AI potential into a structured project environment.
 
-### The OmniMind Homepage
-The ultimate landing experience featuring a seamless infinite marquee of providers, interactive use cases, and prompt galleries.
-![OmniMind Homepage](docs/homepage.png)
+## ✨ Core Highlights
 
-### The Workspace Interface
-A professional Claude-style workspace designed for deep focus. Manage chats, switch between leading LLMs, and organize your work into dynamic contexts.
-![Workspace Interface](docs/chat_interface.png)
+### ⚡ Interactive Artifacts (Claude-Style)
+One of OmniMind's flagship features. When the AI generates code (HTML, SVG, React, etc.), a dedicated **Preview Sidebar** allows you to:
+- **Live Preview**: See your code rendered in real-time.
+- **Inline Editing**: Make instant tweaks directly in the chat.
+- **Smart Download**: Export your snippets as production-ready files.
+- **Auto-Sync**: Your edits are automatically saved back to the conversation history.
 
-### Centralized Artifacts Gallery
-OmniMind automatically scans your chat logs to extract all code blocks, meticulously storing them in an easily accessible, syntax-highlighted library.
-![Artifacts Engine](docs/workspace.png)
+### 📁 Intelligent Project Management
+Organize your intellectual labor into distinct **Projects**. 
+- Group related conversations within a project context.
+- High-level overview of all generated artifacts.
+- Persistent workspace identity that remembers your workflow.
+
+### 🖼️ Multimodal Intelligence
+Fully equipped to handle more than just text.
+- **Vision Support**: Drag and drop images for deep analysis.
+- **File Processing**: Seamlessly integrate data into your prompts.
+
+### 🎨 Human-Centric Design
+- **Pitch Black Aesthetic**: A true dark mode interface (`#000000`) designed for long sessions.
+- **Glassmorphic Elements**: Modern, layered UI with subtle blurs and glow effects.
+- **Dynamic Greetings**: Time-aware greetings (Morning/Afternoon/Evening) for a personal touch.
+- **Fluid Routing**: Instant page transitions with a custom native SPA router.
 
 ---
 
-## ✨ Features
+## 📸 Interface Preview
 
-- **🌐 Unified AI Model Switcher:** Seamlessly toggle between GPT-4o, Claude 3.5 Sonnet, Gemini Pro, Llama 3.3, DeepSeek, and Grok natively without losing context.
-- **🎨 State-of-the-Art UI/UX:** Built with true Premium aesthetics—Dark mode, glassmorphism, fluid micro-animations, and minimal typography.
-- **🔗 Smart URL Routing:** Native SPA routing synchronizes with the URL bar (`/chat/:id`), creating shareable, persistent chat sessions just like Claude and ChatGPT.
-- **🧩 Advanced Artifacts Library:** Automatically isolates and organizes generated code responses into a dedicated code viewer tab with 1-click copy support.
-- **📂 Workspace/Project Galleries:** Group your conversations intelligently into dedicated project folders.
-- **💾 Local Persistence Engine:** Complete `localStorage` caching ensures your data, profile, and conversations are safe entirely offline.
-- **🔍 Native Global Search:** Quickly index and search through all historical chat messages and titles.
-- **🛡️ Privacy & Security Focus:** "Local First" approach ensures data guarantees out-of-the-box.
+<div align="center">
 
-## 🚀 Installation & Setup
+### Modern Homepage Experience
+![OmniMind Homepage](docs/homepage.png)
 
-Want to run OmniMind securely on your local machine?
+*A clean, distraction-free entry point to your workspace.*
 
-**1. Clone the repository**
-```bash
-git clone https://github.com/SAZZAD-404/OmniMind.git
-cd OmniMind
-```
+### Professional AI Chat & Artifacts
+![OmniMind Workspace](docs/workspace.png)
 
-**2. Install dependencies**
-```bash
-npm install
-```
+*The core interaction hub where ideas turn into reality.*
 
-**3. Set up Environment Variables**
-Create a `.env` file in the root directory and securely add your API keys:
-```env
-# Master Configuration
-VITE_OMNIMIND_MASTER_KEY=your_secure_master_key
+</div>
 
-# Specific Model Endpoints
-VITE_OPENAI_API_KEY=your_openai_key
-VITE_ANTHROPIC_API_KEY=your_anthropic_key
-VITE_GOOGLE_API_KEY=your_gemini_key
-```
+---
 
-**4. Start the Development Engine**
-```bash
-npm run dev
-```
-Navigate to `http://localhost:5173/` in your browser.
+## 🔒 Security & Privacy
+- **Local Persistence**: All chat history and project data are synchronized with your local storage.
+- **API Sovereignty**: You control your keys. OmniMind supports direct provider routing and professional proxy setups.
 
-## 🛠️ Tech Stack
+---
 
-- **Frontend Core:** React, Vite (Lightning-fast HMR)
-- **Styling Paradigm:** Custom Vanilla CSS (Dark mode optimized, Semantic design systems)
-- **Iconography:** Lucide-React
-- **Code Visualization:** React-Syntax-Highlighter (Prism VSC Dark Plus)
-- **Routing Engine:** Custom Native History API implementation
-- **State Management:** React Hooks + Browser Local Storage
+<div align="center">
+<p>Developed with passion for the next generation of AI professionals.</p>
 
-## 🤝 Contributing
-Contributions are always welcome. Whether you are fixing bugs or adding new core models to the UI ecosystem, feel free to open a Pull Request.  
-
-**Built with intention by OmniMind.**
+**[Explore the Future of Work](#)**
+</div>

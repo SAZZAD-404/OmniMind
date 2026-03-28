@@ -25,13 +25,13 @@ function App() {
 
   const [selectedModel, setSelectedModel] = useState(MODELS.length > 0 ? MODELS[0] : null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+
   // Real-time Chat Local Storage
   const [chats, setChats] = useState(() => {
     const saved = localStorage.getItem('omnimind_chats');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [currentChatId, setCurrentChatId] = useState(() => {
     const path = window.location.pathname;
     if (path.startsWith('/chat/')) {
@@ -77,7 +77,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('You are OmniMind, a professional AI assistant.'); // Mock settings
-  
+
   // Artifacts State
   const [showArtifacts, setShowArtifacts] = useState(false);
 
@@ -91,7 +91,7 @@ function App() {
   // User Profile State
   const [userProfile, setUserProfile] = useState(() => {
     const saved = localStorage.getItem('omnimind_user');
-    return saved ? JSON.parse(saved) : { name: 'sani' };
+    return saved ? JSON.parse(saved) : { name: 'Admin' };
   });
 
   // Toast Notifications State
@@ -124,17 +124,17 @@ function App() {
 
   const createNewChat = () => {
     // Generate a professional UUID (e.g. 27a04ccb-0a74-4ec3-bc22-3ca4d2895fec)
-    const newChatId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
-      ? crypto.randomUUID() 
+    const newChatId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
       : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-          const r = Math.random() * 16 | 0;
-          return (c === 'x' ? r : ((r & 0x3) | 0x8)).toString(16);
-        });
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : ((r & 0x3) | 0x8)).toString(16);
+      });
 
     const newChat = { id: newChatId, title: "New Chat", messages: [], updatedAt: Date.now() };
     setChats(prev => [newChat, ...prev]);
     setCurrentChatId(newChatId);
-    if(window.innerWidth < 768) setIsSidebarOpen(false);
+    if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
 
   useEffect(() => {
@@ -164,7 +164,7 @@ function App() {
   };
 
   const renameChat = (chatId, newTitle) => {
-    setChats(prev => prev.map(chat => 
+    setChats(prev => prev.map(chat =>
       chat.id === chatId ? { ...chat, title: newTitle, updatedAt: Date.now() } : chat
     ).sort((a, b) => b.updatedAt - a.updatedAt));
   };
@@ -202,13 +202,13 @@ function App() {
   const activeChat = chats.find(c => c.id === currentChatId);
 
   // Project Filtering Logic
-  const projectFilteredChats = selectedProjectId 
+  const projectFilteredChats = selectedProjectId
     ? chats.filter(c => projects.find(p => p.id === selectedProjectId)?.chatIds.includes(c.id))
     : chats;
 
   // Search Logic (Global)
-  const filteredSearchChats = chats.filter(chat => 
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredSearchChats = chats.filter(chat =>
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     chat.messages.some(m => m.content?.toString().toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -224,8 +224,8 @@ function App() {
 
   return (
     <div className={`app-container ${chatVisible ? 'chat-enter' : ''}`}>
-      <Sidebar 
-        isOpen={isSidebarOpen} 
+      <Sidebar
+        isOpen={isSidebarOpen}
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         chats={projectFilteredChats}
         currentChatId={currentChatId}
@@ -245,13 +245,13 @@ function App() {
         userProfile={userProfile}
         setUserProfile={setUserProfile}
       />
-      
+
       <div className="main-wrapper">
         {activeView === 'chat' && (
-          <ChatWindow 
-            selectedModel={selectedModel} 
+          <ChatWindow
+            selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}
-            toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
+            toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             isSidebarOpen={isSidebarOpen}
             activeChat={activeChat}
             updateChatMessages={handleUpdateMessages}
@@ -259,18 +259,18 @@ function App() {
             addToast={addToast}
           />
         )}
-        
+
         {activeView === 'artifacts' && <ArtifactsView chats={chats} />}
         {activeView === 'projects' && (
-          <ProjectsView 
-            projects={projects} 
-            createProject={createNewProject} 
+          <ProjectsView
+            projects={projects}
+            createProject={createNewProject}
             deleteProject={deleteProject}
             onSelectProject={(id) => { setSelectedProjectId(id); setActiveView('chat'); }}
           />
         )}
         {activeView === 'code' && <CodeView />}
-        
+
         {showArtifacts && (
           <div className="artifacts-panel">
             <div style={{ padding: '20px', color: 'var(--text-secondary)' }}>
@@ -282,28 +282,28 @@ function App() {
 
       {/* SEARCH MODAL */}
       <Modal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} title="Search Conversations">
-        <input 
-          type="text" 
-          className="modal-input" 
-          placeholder="Search topics, messages, code..." 
+        <input
+          type="text"
+          className="modal-input"
+          placeholder="Search topics, messages, code..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           autoFocus
         />
         <div style={{ marginTop: '16px', maxHeight: '300px', overflowY: 'auto' }}>
           {searchQuery && filteredSearchChats.length === 0 && (
-            <div style={{ color: 'var(--text-tertiary)', fontSize: '14px'}}>No matches found.</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>No matches found.</div>
           )}
           {filteredSearchChats.map(chat => (
-            <div 
-              key={chat.id} 
-              className="history-item" 
-              style={{ padding: '12px', marginBottom: '4px', background: 'var(--bg-hover)'}}
+            <div
+              key={chat.id}
+              className="history-item"
+              style={{ padding: '12px', marginBottom: '4px', background: 'var(--bg-hover)' }}
               onClick={() => handleSearchSelect(chat.id)}
             >
-              <div style={{ color: 'var(--text-primary)', fontWeight: '500'}}>{chat.title}</div>
-              <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginTop: '4px'}}>
-                 {chat.messages.length} messages • {new Date(chat.updatedAt).toLocaleDateString()}
+              <div style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{chat.title}</div>
+              <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginTop: '4px' }}>
+                {chat.messages.length} messages • {new Date(chat.updatedAt).toLocaleDateString()}
               </div>
             </div>
           ))}
@@ -313,14 +313,14 @@ function App() {
       {/* SETTINGS MODAL */}
       <Modal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="OmniMind Customize">
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '14px'}}>System Prompt</label>
-          <textarea 
-            className="modal-input" 
+          <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '14px' }}>System Prompt</label>
+          <textarea
+            className="modal-input"
             style={{ height: '100px', resize: 'vertical' }}
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
           />
-          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px'}}>Give OmniMind specific behavior instructions. <i>Note: requires API to support System Role.</i></div>
+          <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>Give OmniMind specific behavior instructions. <i>Note: requires API to support System Role.</i></div>
         </div>
         <button className="send-btn" style={{ width: '100%' }} onClick={() => setIsSettingsOpen(false)}>
           Save Configuration
@@ -330,11 +330,11 @@ function App() {
       {/* TOAST LIST */}
       <div className="toast-list">
         {toasts.map(toast => (
-          <Toast 
-            key={toast.id} 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => removeToast(toast.id)} 
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
           />
         ))}
       </div>
