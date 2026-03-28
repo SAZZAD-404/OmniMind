@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  /* Exact Claude Dark Mode Hex Codes */
+  --bg-app: #202020;
+  --bg-sidebar: #191919;
+  --bg-message-user: #303030;
+  --bg-input: #2f2f2f;
+  
+  --text-primary: #e5e5e5;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+  
+  --brand-color: #d97757;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --border-light: rgba(255, 255, 255, 0.08);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: auto;
+}
+
+/* Chat app container locks its own overflow */
+.app-container {
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #525252;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #737373;
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+}
+
+input, textarea, select {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.markdown-body {
+  color: #e5e5e5;
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.markdown-body pre {
+  margin: 1.25rem 0;
+  border-radius: 6px !important;
+  border: 1px solid var(--border-light);
+  background: #181818 !important; 
+  overflow-x: auto;
+}
+
+.markdown-body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.2em 0.4em;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  background-color: transparent;
+}
+
+.markdown-body p, .markdown-body ul, .markdown-body ol {
+  margin-bottom: 1rem;
+}
+
+.markdown-body p:last-child, .markdown-body ul:last-child {
+  margin-bottom: 0;
+}

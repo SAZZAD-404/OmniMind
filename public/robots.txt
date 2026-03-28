@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /chat/
+Allow: /
+Sitemap: https://omnimind.ai/sitemap.xml

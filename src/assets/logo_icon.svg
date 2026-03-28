@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="360" height="360" viewBox="100 100 320 320" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="omniGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#6EA8FE"/>
+<stop offset="100%" stop-color="#8B5CF6"/>
+</linearGradient>
+<radialGradient id="coreGlow" cx="260" cy="260" r="140" gradientUnits="userSpaceOnUse">
+<stop offset="0%" stop-color="#6EA8FE" stop-opacity="0.35"/>
+<stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<circle cx="260" cy="260" r="140" fill="url(#coreGlow)"/>
+<circle cx="260" cy="260" r="120" stroke="url(#omniGradient)" stroke-width="16" fill="none" />
+<ellipse cx="260" cy="260" rx="180" ry="90" stroke="url(#omniGradient)" stroke-width="14" fill="none" />
+<circle cx="120" cy="260" r="10" fill="#6EA8FE"/>
+<circle cx="400" cy="260" r="10" fill="#8B5CF6"/>
+<path d="M210 260 C210 210 260 210 260 260 C260 310 310 310 310 260" stroke="url(#omniGradient)" stroke-width="18" fill="none" stroke-linecap="round" />
+<path d="M260 260 C260 210 310 210 310 260" stroke="url(#omniGradient)" stroke-width="18" fill="none" stroke-linecap="round" />
+<circle cx="260" cy="260" r="6" fill="#6EA8FE"/>
+</svg>
